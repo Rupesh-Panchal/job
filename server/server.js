@@ -11,20 +11,15 @@ import jobRoutes from "./routes/jobRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import { clerkMiddleware } from "@clerk/express";
 
-// Initialize Express
 const app = express();
 
-// Connect to database
-await connectDB();
-await connectCloudinary();
-
-//Middleware
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(clerkMiddleware());
 
-//Routes
+// Routes
 app.get("/", (req, res) => res.send("API Working"));
 app.get("/debug-sentry", function mainHandler(req, res) {
   throw new Error("My first Sentry error!");
@@ -34,14 +29,22 @@ app.use("/api/company", companyRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/users", userRoutes);
 
-// Sentry error handler should come **after all routes**
-//app.use(Sentry.Handlers.errorHandler());
-
-//port
-const PORT = process.env.PORT || 5000;
-
+// Sentry error handler should come after all routes
+// app.use(Sentry.Handlers.errorHandler());
 Sentry.setupExpressErrorHandler(app);
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// PORT
+const PORT = process.env.PORT || 5000;
+
+// Wrap startup in async function
+(async () => {
+  try {
+    await connectDB();
+    await connectCloudinary();
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error("Server failed to start", err);
+  }
+})();
