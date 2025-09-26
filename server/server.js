@@ -10,17 +10,21 @@ import connectCloudinary from "./config/cloudinary.js";
 import jobRoutes from "./routes/jobRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import { clerkMiddleware } from "@clerk/express";
-import serverless from "serverless-http";
 
+// Initialize Express
 const app = express();
 
-// Middleware
+// Connect to database
+await connectDB();
+await connectCloudinary();
+
+//Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(clerkMiddleware());
 
-// Routes
+//Routes
 app.get("/", (req, res) => res.send("API Working"));
 app.get("/debug-sentry", function mainHandler(req, res) {
   throw new Error("My first Sentry error!");
@@ -30,22 +34,14 @@ app.use("/api/company", companyRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/users", userRoutes);
 
-// Sentry error handler should come after all routes
-// app.use(Sentry.Handlers.errorHandler());
-Sentry.setupExpressErrorHandler(app);
+// Sentry error handler should come **after all routes**
+//app.use(Sentry.Handlers.errorHandler());
 
-// PORT
+//port
 const PORT = process.env.PORT || 5000;
 
-// Wrap startup in async function
-(async () => {
-  try {
-    await connectDB();
-    await connectCloudinary();
-    console.log("MongoDB & Cloudinary connected");
-  } catch (err) {
-    console.error("Failed to initialize services", err);
-  }
-})();
+Sentry.setupExpressErrorHandler(app);
 
-export const handler = serverless(app);
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
