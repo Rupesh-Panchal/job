@@ -10,6 +10,7 @@ import connectCloudinary from "./config/cloudinary.js";
 import jobRoutes from "./routes/jobRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import { clerkMiddleware } from "@clerk/express";
+import serverless from "serverless-http";
 
 const app = express();
 
@@ -41,10 +42,10 @@ const PORT = process.env.PORT || 5000;
   try {
     await connectDB();
     await connectCloudinary();
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-    });
+    console.log("MongoDB & Cloudinary connected");
   } catch (err) {
-    console.error("Server failed to start", err);
+    console.error("Failed to initialize services", err);
   }
 })();
+
+export const handler = serverless(app);
